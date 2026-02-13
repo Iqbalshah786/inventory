@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/app/login/actions";
+import { ChangePasswordDialog } from "@/components/change-password-dialog";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -56,7 +57,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t p-2">
+      <div className="border-t p-2 space-y-1">
+        <ChangePasswordDialog />
         <form action={signOutAction}>
           <Button
             variant="ghost"

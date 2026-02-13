@@ -25,13 +25,18 @@ export async function PATCH(request: Request) {
 
     // Check if username is already taken
     const existing = await adminRepo.findByUsername(newUsername);
-    if (existing && String(existing.id) !== session.user.id) {
+    if (existing && existing.username !== session.user.name) {
       return NextResponse.json(error("Username is already taken"), {
         status: 409,
       });
     }
 
-    await adminRepo.updateUsername(Number(session.user.id), newUsername);
+    const currentAdmin = await adminRepo.findByUsername(session.user.name!);
+    if (!currentAdmin) {
+      return NextResponse.json(error("User not found"), { status: 404 });
+    }
+
+    await adminRepo.updateUsername(currentAdmin.id, newUsername);
 
     return NextResponse.json(
       success({ username: newUsername }, "Username updated successfully"),
