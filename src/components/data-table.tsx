@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   ColumnDef,
+  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -31,6 +32,7 @@ export function DataTable<TData, TValue>({
   filterColumn,
   filterPlaceholder = "Search…",
 }: DataTableProps<TData, TValue>) {
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({
@@ -38,21 +40,32 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     state: {
-      globalFilter: filterColumn ? undefined : globalFilter,
-      columnFilters: filterColumn
-        ? [{ id: filterColumn, value: globalFilter }]
-        : [],
+      columnFilters,
+      globalFilter,
     },
-    onGlobalFilterChange: filterColumn ? undefined : setGlobalFilter,
   });
+
+  const filterValue = filterColumn
+    ? ((table.getColumn(filterColumn)?.getFilterValue() as string) ?? "")
+    : globalFilter;
+
+  function handleFilterChange(value: string) {
+    if (filterColumn) {
+      table.getColumn(filterColumn)?.setFilterValue(value);
+    } else {
+      setGlobalFilter(value);
+    }
+  }
 
   return (
     <div className="space-y-4">
       <Input
         placeholder={filterPlaceholder}
-        value={globalFilter}
-        onChange={(e) => setGlobalFilter(e.target.value)}
+        value={filterValue}
+        onChange={(e) => handleFilterChange(e.target.value)}
         className="max-w-sm"
       />
       <div className="rounded-md border">

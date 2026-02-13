@@ -8,8 +8,12 @@ export const stockColumns: ColumnDef<StockListRow>[] = [
     accessorKey: "purchase_date",
     header: "Date",
     cell: ({ row }) => {
-      const d = row.getValue("purchase_date") as string;
-      return new Date(d).toLocaleDateString();
+      const raw = row.getValue("purchase_date");
+      const d = raw instanceof Date ? raw : new Date(raw as string);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
     },
   },
   {

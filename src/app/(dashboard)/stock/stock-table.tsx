@@ -15,8 +15,30 @@ interface StockTableProps {
 export function StockTable({ data }: StockTableProps) {
   const [dateFilter, setDateFilter] = useState("");
 
+  // Normalise purchase_date to "YYYY-MM-DD" regardless of what PG/Neon returns
+  function toDateString(value: unknown): string {
+    if (value instanceof Date) {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, "0");
+      const d = String(value.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    // Neon may return a string like "2026-02-13" already
+    const s = String(value);
+    // Try parsing if it's not already YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    const parsed = new Date(s);
+    if (!isNaN(parsed.getTime())) {
+      const y = parsed.getFullYear();
+      const m = String(parsed.getMonth() + 1).padStart(2, "0");
+      const d = String(parsed.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    return s;
+  }
+
   const filtered = dateFilter
-    ? data.filter((r) => r.purchase_date.startsWith(dateFilter))
+    ? data.filter((r) => toDateString(r.purchase_date) === dateFilter)
     : data;
 
   function downloadCsv() {
