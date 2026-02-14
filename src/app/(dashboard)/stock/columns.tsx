@@ -32,7 +32,7 @@ export const stockColumns: ColumnDef<StockListRow>[] = [
   {
     accessorKey: "fedex_cost",
     header: "FedEx Cost",
-    cell: ({ row }) => `${Number(row.getValue("fedex_cost")).toFixed(2)} AED`,
+    cell: ({ row }) => `$${Number(row.getValue("fedex_cost")).toFixed(2)}`,
   },
   {
     accessorKey: "local_expense",

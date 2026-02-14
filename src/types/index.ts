@@ -32,7 +32,7 @@ export interface PurchaseLot {
   total_quantity: number;
   total_usd_amount: number;
   local_cost_aed: number | null;
-  fedex_cost_aed: number | null;
+  fedex_cost_usd: number | null;
 }
 
 export interface PurchaseLotItem {

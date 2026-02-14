@@ -68,7 +68,7 @@ export function StockForm({ models }: StockFormProps) {
         quantity: Number(r.quantity) || 0,
         buyer_price_usd: Number(r.buyer_price_usd) || 0,
       })),
-      fedex_cost_aed: Number(fedexCost) || 0,
+      fedex_cost_usd: Number(fedexCost) || 0,
       local_expense_aed: Number(localExpense) || 0,
       amount_paid: amountPaid ? Number(amountPaid) : undefined,
     };
@@ -174,7 +174,7 @@ export function StockForm({ models }: StockFormProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label>FedEx Cost (AED)</Label>
+          <Label>FedEx Cost (USD)</Label>
           <Input
             type="number"
             min={0}

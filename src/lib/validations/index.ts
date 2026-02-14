@@ -28,7 +28,7 @@ export const stockItemSchema = z.object({
 
 export const stockFormSchema = z.object({
   items: z.array(stockItemSchema).min(1, "At least one item is required"),
-  fedex_cost_aed: z.coerce.number().nonnegative().default(0),
+  fedex_cost_usd: z.coerce.number().nonnegative().default(0),
   local_expense_aed: z.coerce.number().nonnegative().default(0),
   amount_paid: z.coerce.number().nonnegative().optional(),
 });

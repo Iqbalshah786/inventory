@@ -12,7 +12,7 @@ export async function findAll(dateFilter?: string): Promise<StockListRow[]> {
       m.model_name,
       pli.quantity,
       pli.unit_price_usd AS buying_price,
-      COALESCE(pl.fedex_cost_aed, 0) AS fedex_cost,
+      COALESCE(pl.fedex_cost_usd, 0) AS fedex_cost,
       COALESCE(pl.local_cost_aed, 0) AS local_expense,
       (pli.quantity * pli.unit_price_usd) AS total_price
     FROM purchase_lot_items pli
@@ -46,15 +46,16 @@ export async function createStock(input: StockFormInput): Promise<number> {
     // 1. Insert purchase lot
     const lotRes = await client.query(
       `INSERT INTO purchase_lots
-        (purchase_date, total_quantity, total_usd_amount, local_cost_aed, fedex_cost_aed)
+        (purchase_date, total_quantity, total_usd_amount, local_cost_aed, fedex_cost_usd)
        VALUES (CURRENT_DATE, $1, $2, $3, $4)
        RETURNING id`,
-      [totalQty, totalUsd, input.local_expense_aed, input.fedex_cost_aed],
+      [totalQty, totalUsd, input.local_expense_aed, input.fedex_cost_usd],
     );
     const lotId: number = lotRes.rows[0].id;
 
-    // Proportional cost spread
-    const totalExtraAed = input.fedex_cost_aed + input.local_expense_aed;
+    // Extra costs: fedex is USD (convert to AED), local is already AED
+    const fedexAed = convertToAED(input.fedex_cost_usd);
+    const totalExtraAed = fedexAed + input.local_expense_aed;
 
     for (const item of input.items) {
       // 2. Insert lot items
@@ -65,11 +66,10 @@ export async function createStock(input: StockFormInput): Promise<number> {
       );
 
       // 3. Calculate per-item cost in AED
-      const itemUsdTotal = item.quantity * item.buyer_price_usd;
-      const proportion = totalUsd > 0 ? itemUsdTotal / totalUsd : 0;
-      const extraPerItem =
-        totalQty > 0 ? (totalExtraAed * proportion) / item.quantity : 0;
-      const costPerItemAed = convertToAED(item.buyer_price_usd) + extraPerItem;
+      //    Formula: (buying_price_usd * AED_RATE) + (fedex_usd * AED_RATE + local_aed) / total_qty_of_lot
+      const overheadPerPiece = totalQty > 0 ? totalExtraAed / totalQty : 0;
+      const costPerItemAed =
+        convertToAED(item.buyer_price_usd) + overheadPerPiece;
 
       // 4. Upsert inventory (PostgreSQL ON CONFLICT)
       await client.query(
