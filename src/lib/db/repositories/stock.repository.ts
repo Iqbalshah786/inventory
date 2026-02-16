@@ -1,6 +1,6 @@
 import { getClient } from "@/lib/db/connection";
 import { query } from "@/lib/db/connection";
-import { convertToAED, convertToUSD } from "@/lib/utils/currency";
+import { AED_PER_USD } from "@/lib/utils/currency";
 import type { StockFormInput } from "@/lib/validations";
 import type { StockListRow } from "@/types";
 
@@ -53,10 +53,6 @@ export async function createStock(input: StockFormInput): Promise<number> {
     );
     const lotId: number = lotRes.rows[0].id;
 
-    // Extra costs: fedex is USD (convert to AED), local is already AED
-    const fedexAed = convertToAED(input.fedex_cost_usd);
-    const totalExtraAed = fedexAed + input.local_expense_aed;
-
     for (const item of input.items) {
       // 2. Insert lot items
       await client.query(
@@ -65,16 +61,22 @@ export async function createStock(input: StockFormInput): Promise<number> {
         [lotId, item.model_id, item.quantity, item.buyer_price_usd],
       );
 
-      // 3. Calculate per-item cost in AED
-      //    cost_per_piece = (price_usd + fedex_usd / total_qty) * rate + local_aed / total_qty
-      const overheadPerPiece = totalQty > 0 ? totalExtraAed / totalQty : 0;
-      const costPerItemAed =
-        convertToAED(item.buyer_price_usd) + overheadPerPiece;
+      // 3. Calculate per-piece cost in AED (NO intermediate rounding)
+      //    model_total = (price_usd * qty) * rate
+      //                + rate * (fedex_usd * qty / total_qty)
+      //                + (local_aed * qty / total_qty)
+      //    per_piece   = model_total / qty
+      const rate = AED_PER_USD;
+      const qty = item.quantity;
+      const modelTotalAed =
+        item.buyer_price_usd * qty * rate +
+        rate * ((input.fedex_cost_usd * qty) / totalQty) +
+        (input.local_expense_aed * qty) / totalQty;
+      const costPerItemAed = modelTotalAed / qty;
+      const costPerItemUsd = costPerItemAed / rate;
 
       // 4. Upsert inventory (PostgreSQL ON CONFLICT)
-      //    cost_per_piece = (price_usd + fedex_usd / total_qty) * rate + local_aed / total_qty
       //    new_avg = (old_qty * old_avg + new_qty * cost_per_piece) / (old_qty + new_qty)
-      const costPerItemUsd = convertToUSD(costPerItemAed);
 
       await client.query(
         `INSERT INTO inventory (model_id, quantity_remaining, cost_per_item_aed, avg_cost_aed, avg_cost_usd)
@@ -117,7 +119,10 @@ export async function createStock(input: StockFormInput): Promise<number> {
     );
     const acctId: number = acctRes.rows[0].id;
 
-    const totalAed = convertToAED(totalUsd) + totalExtraAed;
+    const totalAed =
+      totalUsd * AED_PER_USD +
+      input.fedex_cost_usd * AED_PER_USD +
+      input.local_expense_aed;
 
     await client.query(
       `INSERT INTO ledger_transactions
