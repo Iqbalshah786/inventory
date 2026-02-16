@@ -39,7 +39,6 @@ export const saleItemSchema = z.object({
   client_id: z.coerce.number().int().positive("Client is required"),
   model_id: z.coerce.number().int().positive("Model is required"),
   quantity: z.coerce.number().int().positive("Quantity must be positive"),
-  buying_price: z.coerce.number().nonnegative("Buying price required"),
   selling_price: z.coerce.number().positive("Selling price required"),
 });
 

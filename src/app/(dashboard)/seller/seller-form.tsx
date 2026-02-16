@@ -24,7 +24,6 @@ const emptyRow: SaleFormRow = {
   client_id: "",
   model_id: "",
   quantity: "",
-  buying_price: "",
   selling_price: "",
   total: 0,
 };
@@ -49,11 +48,7 @@ export function SellerForm({ clients, models }: SellerFormProps) {
 
         if (field === "client_id" || field === "model_id") {
           (updated[field] as number | "") = value ? Number(value) : "";
-        } else if (
-          field === "quantity" ||
-          field === "buying_price" ||
-          field === "selling_price"
-        ) {
+        } else if (field === "quantity" || field === "selling_price") {
           (updated[field] as number | "") = value ? Number(value) : "";
         }
 
@@ -102,7 +97,6 @@ export function SellerForm({ clients, models }: SellerFormProps) {
         client_id: Number(r.client_id) || 0,
         model_id: Number(r.model_id) || 0,
         quantity: Number(r.quantity) || 0,
-        buying_price: Number(r.buying_price) || 0,
         selling_price: Number(r.selling_price) || 0,
       })),
       amount_received:
@@ -197,20 +191,6 @@ export function SellerForm({ clients, models }: SellerFormProps) {
                 placeholder="Qty"
                 value={row.quantity}
                 onChange={(e) => updateRow(idx, "quantity", e.target.value)}
-              />
-            </div>
-
-            <div className="w-28">
-              {idx === 0 && (
-                <Label className="mb-1 block text-xs">Buy Price</Label>
-              )}
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
-                placeholder="Buy"
-                value={row.buying_price}
-                onChange={(e) => updateRow(idx, "buying_price", e.target.value)}
               />
             </div>
 

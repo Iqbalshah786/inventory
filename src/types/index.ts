@@ -124,7 +124,6 @@ export interface SaleRow {
   client_id: number;
   model_id: number;
   quantity: number;
-  buying_price: number;
   selling_price: number;
   total: number;
 }
@@ -139,7 +138,6 @@ export interface SaleFormRow {
   client_id: number | "";
   model_id: number | "";
   quantity: number | "";
-  buying_price: number | "";
   selling_price: number | "";
   total: number;
 }

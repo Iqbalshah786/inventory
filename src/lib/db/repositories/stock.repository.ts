@@ -1,6 +1,6 @@
 import { getClient } from "@/lib/db/connection";
 import { query } from "@/lib/db/connection";
-import { convertToAED } from "@/lib/utils/currency";
+import { convertToAED, convertToUSD } from "@/lib/utils/currency";
 import type { StockFormInput } from "@/lib/validations";
 import type { StockListRow } from "@/types";
 
@@ -66,12 +66,16 @@ export async function createStock(input: StockFormInput): Promise<number> {
       );
 
       // 3. Calculate per-item cost in AED
-      //    Formula: (buying_price_usd * AED_RATE) + (fedex_usd * AED_RATE + local_aed) / total_qty_of_lot
+      //    cost_per_piece = (price_usd + fedex_usd / total_qty) * rate + local_aed / total_qty
       const overheadPerPiece = totalQty > 0 ? totalExtraAed / totalQty : 0;
       const costPerItemAed =
         convertToAED(item.buyer_price_usd) + overheadPerPiece;
 
       // 4. Upsert inventory (PostgreSQL ON CONFLICT)
+      //    cost_per_piece = (price_usd + fedex_usd / total_qty) * rate + local_aed / total_qty
+      //    new_avg = (old_qty * old_avg + new_qty * cost_per_piece) / (old_qty + new_qty)
+      const costPerItemUsd = convertToUSD(costPerItemAed);
+
       await client.query(
         `INSERT INTO inventory (model_id, quantity_remaining, cost_per_item_aed, avg_cost_aed, avg_cost_usd)
          VALUES ($1, $2, $3, $4, $5)
@@ -82,17 +86,19 @@ export async function createStock(input: StockFormInput): Promise<number> {
              / (inventory.quantity_remaining + EXCLUDED.quantity_remaining)
            ),
            avg_cost_usd = (
+             (inventory.avg_cost_usd * inventory.quantity_remaining + EXCLUDED.avg_cost_usd * EXCLUDED.quantity_remaining)
+             / (inventory.quantity_remaining + EXCLUDED.quantity_remaining)
+           ),
+           cost_per_item_aed = (
              (inventory.avg_cost_aed * inventory.quantity_remaining + EXCLUDED.avg_cost_aed * EXCLUDED.quantity_remaining)
              / (inventory.quantity_remaining + EXCLUDED.quantity_remaining)
-           ) / $6,
-           cost_per_item_aed = EXCLUDED.cost_per_item_aed`,
+           )`,
         [
           item.model_id,
           item.quantity,
           costPerItemAed,
           costPerItemAed,
-          item.buyer_price_usd,
-          convertToAED(1),
+          costPerItemUsd,
         ],
       );
     }
