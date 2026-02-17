@@ -13,7 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Printer } from "lucide-react";
+import {
+  printSaleInvoice,
+  type PrintableSale,
+} from "@/lib/utils/print-invoice";
 
 interface SellerFormProps {
   clients: Client[];
@@ -34,6 +38,7 @@ export function SellerForm({ clients, models }: SellerFormProps) {
   const [amountReceived, setAmountReceived] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [savedSale, setSavedSale] = useState<PrintableSale | null>(null);
 
   // Determine if selected client is walkin
   const selectedClientId = rows[0]?.client_id;
@@ -115,7 +120,32 @@ export function SellerForm({ clients, models }: SellerFormProps) {
       if (!data.success) {
         setError(data.message);
       } else {
-        router.push("/clients");
+        const saleId: number = data.data.saleId;
+        const clientName = selectedClient?.name ?? "";
+        const today = new Date().toISOString().slice(0, 10);
+        const totalQty = rows.reduce(
+          (s, r) => s + (Number(r.quantity) || 0),
+          0,
+        );
+        const printable: PrintableSale = {
+          sale_id: saleId,
+          client_name: clientName,
+          total_quantity: totalQty,
+          total_aed: totalPurchase,
+          sale_date: today,
+          items: rows.map((r) => {
+            const model = models.find((m) => m.id === Number(r.model_id));
+            const qty = Number(r.quantity) || 0;
+            const price = Number(r.selling_price) || 0;
+            return {
+              model_name: model?.model_name ?? "",
+              quantity: qty,
+              selling_price_aed: price,
+              line_total_aed: qty * price,
+            };
+          }),
+        };
+        setSavedSale(printable);
         router.refresh();
       }
     } catch {
@@ -123,6 +153,36 @@ export function SellerForm({ clients, models }: SellerFormProps) {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (savedSale) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-md border bg-green-50 p-6 text-center dark:bg-green-950">
+          <h2 className="mb-2 text-xl font-semibold text-green-700 dark:text-green-300">
+            Sale saved successfully!
+          </h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Invoice #{savedSale.sale_id} &mdash; {savedSale.client_name}
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Button onClick={() => printSaleInvoice(savedSale)}>
+              <Printer className="mr-2 h-4 w-4" /> Print Invoice
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSavedSale(null);
+                setRows([{ ...emptyRow }]);
+                setAmountReceived("");
+              }}
+            >
+              New Sale
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
