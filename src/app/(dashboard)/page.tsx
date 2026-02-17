@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/auth-guard";
 import { query } from "@/lib/db/connection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Smartphone, Package, ShoppingCart } from "lucide-react";
+import { SalesSummaryTable } from "./sales-summary-table";
 
 interface CountRow {
   count: number;
@@ -54,6 +55,16 @@ export default async function HomePage() {
           </Card>
         ))}
       </div>
+
+      {/* Sales summary table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Sales Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SalesSummaryTable />
+        </CardContent>
+      </Card>
     </div>
   );
 }
