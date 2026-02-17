@@ -3,12 +3,20 @@ import { auth } from "@/lib/auth";
 import { query } from "@/lib/db/connection";
 import { success, error } from "@/lib/utils/api-response";
 
+export interface SaleItemDetail {
+  model_name: string;
+  quantity: number;
+  selling_price_aed: number;
+  line_total_aed: number;
+}
+
 export interface SalesSummaryRow {
   sale_id: number;
   client_name: string;
   total_quantity: number;
   total_aed: number;
   sale_date: string;
+  items: SaleItemDetail[];
 }
 
 export async function GET(request: NextRequest) {
@@ -42,10 +50,22 @@ export async function GET(request: NextRequest) {
          c.name      AS client_name,
          COALESCE(SUM(si.quantity), 0)::int AS total_quantity,
          s.total_amount_aed AS total_aed,
-         s.sale_date::text   AS sale_date
+         s.sale_date::text   AS sale_date,
+         COALESCE(
+           json_agg(
+             json_build_object(
+               'model_name',        m.model_name,
+               'quantity',           si.quantity,
+               'selling_price_aed', si.selling_price_aed,
+               'line_total_aed',    si.quantity * si.selling_price_aed
+             )
+           ) FILTER (WHERE si.id IS NOT NULL),
+           '[]'::json
+         ) AS items
        FROM sales s
        JOIN clients c ON c.id = s.client_id
        LEFT JOIN sale_items si ON si.sale_id = s.id
+       LEFT JOIN mobile_models m ON m.id = si.model_id
        ${where}
        GROUP BY s.id, c.name, s.total_amount_aed, s.sale_date
        ORDER BY s.sale_date DESC, s.id DESC`,

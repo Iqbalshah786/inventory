@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Fragment } from "react";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getExpandedRowModel,
   useReactTable,
+  Row,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -18,9 +20,16 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, ChevronRight, ChevronDown } from "lucide-react";
 
 // ---- types ----
+
+interface SaleItemDetail {
+  model_name: string;
+  quantity: number;
+  selling_price_aed: number;
+  line_total_aed: number;
+}
 
 interface SalesSummaryRow {
   sale_id: number;
@@ -28,12 +37,26 @@ interface SalesSummaryRow {
   total_quantity: number;
   total_aed: number;
   sale_date: string;
+  items: SaleItemDetail[];
 }
 
 // ---- PDF / print helper ----
 
 function printRow(row: SalesSummaryRow) {
-  const companyName = "Your Company Name"; // placeholder
+  const companyName = "Dhar Al Fakhr"; // placeholder
+
+  const itemRows = row.items
+    .map(
+      (item, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${item.model_name}</td>
+      <td style="text-align:center">${item.quantity}</td>
+      <td style="text-align:right">${Number(item.selling_price_aed).toFixed(2)}</td>
+      <td style="text-align:right">${Number(item.line_total_aed).toFixed(2)}</td>
+    </tr>`,
+    )
+    .join("");
 
   const html = `
 <!DOCTYPE html>
@@ -45,10 +68,13 @@ function printRow(row: SalesSummaryRow) {
     .header { text-align: center; margin-bottom: 30px; }
     .header h1 { margin: 0; font-size: 24px; }
     .header p { margin: 4px 0; color: #666; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 10px 14px; text-align: left; }
-    th { background: #f5f5f5; }
-    .total-row td { font-weight: bold; }
+    .info-table { width: 100%; margin-bottom: 20px; }
+    .info-table td { padding: 4px 8px; }
+    .info-table .label { font-weight: bold; width: 120px; }
+    .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .items-table th, .items-table td { border: 1px solid #ddd; padding: 10px 14px; }
+    .items-table th { background: #f5f5f5; text-align: left; }
+    .total-row { font-weight: bold; background: #fafafa; }
     @media print { body { padding: 20px; } }
   </style>
 </head>
@@ -58,12 +84,31 @@ function printRow(row: SalesSummaryRow) {
     <p>Sales Invoice</p>
   </div>
 
-  <table>
-    <tr><th>Invoice #</th><td>${row.sale_id}</td></tr>
-    <tr><th>Client</th><td>${row.client_name}</td></tr>
-    <tr><th>Date</th><td>${row.sale_date}</td></tr>
-    <tr><th>Total Qty</th><td>${row.total_quantity}</td></tr>
-    <tr class="total-row"><th>Total Amount</th><td>${Number(row.total_aed).toFixed(2)} AED</td></tr>
+  <table class="info-table">
+    <tr><td class="label">Invoice #</td><td>${row.sale_id}</td></tr>
+    <tr><td class="label">Client</td><td>${row.client_name}</td></tr>
+    <tr><td class="label">Date</td><td>${row.sale_date}</td></tr>
+  </table>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Model</th>
+        <th style="text-align:center">Quantity</th>
+        <th style="text-align:right">Price/Piece (AED)</th>
+        <th style="text-align:right">Total (AED)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemRows}
+      <tr class="total-row">
+        <td colspan="2">Total</td>
+        <td style="text-align:center">${row.total_quantity}</td>
+        <td></td>
+        <td style="text-align:right">${Number(row.total_aed).toFixed(2)}</td>
+      </tr>
+    </tbody>
   </table>
 
   <script>window.onload=function(){window.print();}<\/script>
@@ -77,9 +122,75 @@ function printRow(row: SalesSummaryRow) {
   }
 }
 
+// ---- sub-row component ----
+
+function ItemDetailsRow({
+  row,
+  colSpan,
+}: {
+  row: Row<SalesSummaryRow>;
+  colSpan: number;
+}) {
+  const items = row.original.items;
+  if (!items || items.length === 0) return null;
+
+  return (
+    <TableRow className="bg-muted/40">
+      <TableCell colSpan={colSpan} className="p-0">
+        <div className="px-8 py-3">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-muted-foreground">
+                <th className="pb-1 text-left font-medium">Model</th>
+                <th className="pb-1 text-center font-medium">Qty</th>
+                <th className="pb-1 text-right font-medium">
+                  Price/Piece (AED)
+                </th>
+                <th className="pb-1 text-right font-medium">Total (AED)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, i) => (
+                <tr key={i} className="border-t border-border/50">
+                  <td className="py-1">{item.model_name}</td>
+                  <td className="py-1 text-center">{item.quantity}</td>
+                  <td className="py-1 text-right">
+                    {Number(item.selling_price_aed).toFixed(2)}
+                  </td>
+                  <td className="py-1 text-right">
+                    {Number(item.line_total_aed).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 // ---- columns ----
 
 const columns: ColumnDef<SalesSummaryRow>[] = [
+  {
+    id: "expand",
+    header: "",
+    cell: ({ row }) => (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6"
+        onClick={() => row.toggleExpanded()}
+      >
+        {row.getIsExpanded() ? (
+          <ChevronDown className="h-4 w-4" />
+        ) : (
+          <ChevronRight className="h-4 w-4" />
+        )}
+      </Button>
+    ),
+  },
   {
     accessorKey: "client_name",
     header: "Client Name",
@@ -87,7 +198,7 @@ const columns: ColumnDef<SalesSummaryRow>[] = [
   },
   {
     accessorKey: "total_quantity",
-    header: "Total Qty Sold",
+    header: "Total Quantity Sold",
     cell: ({ row }) => row.getValue<number>("total_quantity"),
   },
   {
@@ -152,6 +263,7 @@ export function SalesSummaryTable() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     state: { globalFilter },
   });
@@ -219,16 +331,21 @@ export function SalesSummaryTable() {
               </TableRow>
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <Fragment key={row.id}>
+                  <TableRow>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {row.getIsExpanded() && (
+                    <ItemDetailsRow row={row} colSpan={columns.length} />
+                  )}
+                </Fragment>
               ))
             ) : (
               <TableRow>
