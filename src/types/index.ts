@@ -101,6 +101,14 @@ export interface ApiResponse<T = unknown> {
 
 export interface ClientWithBalance extends Client {
   balance: number;
+  balance_usd: number;
+}
+
+export interface SupplierWithBalance {
+  id: number;
+  name: string;
+  balance_aed: number;
+  balance_usd: number;
 }
 
 export interface ModelWithInventory extends MobileModel {

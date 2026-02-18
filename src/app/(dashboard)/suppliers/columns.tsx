@@ -1,21 +1,21 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import type { ClientWithBalance } from "@/types";
+import type { SupplierWithBalance } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
-export const clientColumns: ColumnDef<ClientWithBalance>[] = [
+export const supplierColumns: ColumnDef<SupplierWithBalance>[] = [
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Supplier Name",
     filterFn: "includesString",
   },
   {
-    accessorKey: "balance",
+    accessorKey: "balance_aed",
     header: "Balance (AED)",
     cell: ({ row }) => {
-      const val = Number(row.getValue("balance"));
+      const val = Number(row.getValue("balance_aed"));
       return <span className="font-medium">{val.toFixed(2)} AED</span>;
     },
   },
@@ -31,14 +31,14 @@ export const clientColumns: ColumnDef<ClientWithBalance>[] = [
     id: "download",
     header: "Details",
     cell: ({ row }) => {
-      const clientId = row.original.id;
+      const supplierId = row.original.id;
       return (
         <Button
           variant="ghost"
           size="icon"
           title="Download purchase history"
           onClick={() => {
-            window.open(`/api/clients/${clientId}/download`, "_blank");
+            window.open(`/api/suppliers/${supplierId}/download`, "_blank");
           }}
         >
           <Download className="h-4 w-4" />

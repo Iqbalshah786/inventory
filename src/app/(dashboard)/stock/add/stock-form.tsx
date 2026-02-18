@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { MobileModel, StockFormRow } from "@/types";
+import type { MobileModel, Supplier, StockFormRow } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import { Plus, Trash2, Save } from "lucide-react";
 
 interface StockFormProps {
   models: MobileModel[];
+  suppliers: Supplier[];
 }
 
 const emptyRow: StockFormRow = {
@@ -25,12 +26,13 @@ const emptyRow: StockFormRow = {
   buyer_price_usd: "",
 };
 
-export function StockForm({ models }: StockFormProps) {
+export function StockForm({ models, suppliers }: StockFormProps) {
   const router = useRouter();
   const [rows, setRows] = useState<StockFormRow[]>([{ ...emptyRow }]);
   const [fedexCost, setFedexCost] = useState("");
   const [localExpense, setLocalExpense] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
+  const [supplierId, setSupplierId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -71,6 +73,7 @@ export function StockForm({ models }: StockFormProps) {
       fedex_cost_usd: Number(fedexCost) || 0,
       local_expense_aed: Number(localExpense) || 0,
       amount_paid: amountPaid ? Number(amountPaid) : undefined,
+      supplier_id: supplierId ? Number(supplierId) : undefined,
     };
 
     try {
@@ -101,6 +104,23 @@ export function StockForm({ models }: StockFormProps) {
           {error}
         </div>
       )}
+
+      {/* Supplier selection */}
+      <div className="max-w-sm space-y-2">
+        <Label>Supplier</Label>
+        <Select value={supplierId} onValueChange={setSupplierId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select supplier" />
+          </SelectTrigger>
+          <SelectContent>
+            {suppliers.map((s) => (
+              <SelectItem key={s.id} value={String(s.id)}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="space-y-3">
         {rows.map((row, idx) => (

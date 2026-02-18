@@ -31,6 +31,11 @@ export const stockFormSchema = z.object({
   fedex_cost_usd: z.coerce.number().nonnegative().default(0),
   local_expense_aed: z.coerce.number().nonnegative().default(0),
   amount_paid: z.coerce.number().nonnegative().optional(),
+  supplier_id: z.coerce
+    .number()
+    .int()
+    .positive("Supplier is required")
+    .optional(),
 });
 
 export type StockFormInput = z.infer<typeof stockFormSchema>;

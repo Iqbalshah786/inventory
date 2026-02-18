@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   LayoutDashboard,
   LogOut,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/app/login/actions";
@@ -18,6 +19,7 @@ import { ChangePasswordDialog } from "@/components/change-password-dialog";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/suppliers", label: "Suppliers", icon: Truck },
   { href: "/models", label: "Models", icon: Smartphone },
   { href: "/stock", label: "Stock", icon: Package },
   { href: "/seller", label: "Sell", icon: ShoppingCart },

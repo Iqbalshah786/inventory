@@ -46,10 +46,16 @@ export async function createStock(input: StockFormInput): Promise<number> {
     // 1. Insert purchase lot
     const lotRes = await client.query(
       `INSERT INTO purchase_lots
-        (purchase_date, total_quantity, total_usd_amount, local_cost_aed, fedex_cost_usd)
-       VALUES (CURRENT_DATE, $1, $2, $3, $4)
+        (supplier_id, purchase_date, total_quantity, total_usd_amount, local_cost_aed, fedex_cost_usd)
+       VALUES ($1, CURRENT_DATE, $2, $3, $4, $5)
        RETURNING id`,
-      [totalQty, totalUsd, input.local_expense_aed, input.fedex_cost_usd],
+      [
+        input.supplier_id ?? null,
+        totalQty,
+        totalUsd,
+        input.local_expense_aed,
+        input.fedex_cost_usd,
+      ],
     );
     const lotId: number = lotRes.rows[0].id;
 
