@@ -10,7 +10,6 @@ export async function addClientAction(
 ): Promise<{ error?: string; success?: boolean }> {
   const raw = {
     name: formData.get("name"),
-    client_type: formData.get("client_type"),
   };
 
   const parsed = clientSchema.safeParse(raw);
@@ -19,7 +18,7 @@ export async function addClientAction(
   }
 
   try {
-    await clientsRepo.create(parsed.data.name, parsed.data.client_type);
+    await clientsRepo.create(parsed.data.name, "regular");
     revalidatePath("/clients");
     return { success: true };
   } catch {

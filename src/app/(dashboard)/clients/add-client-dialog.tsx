@@ -12,13 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Plus } from "lucide-react";
 
 export function AddClientDialog() {
@@ -50,19 +43,6 @@ export function AddClientDialog() {
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input id="name" name="name" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="client_type">Client Type</Label>
-            <Select name="client_type" defaultValue="regular">
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="regular">Regular</SelectItem>
-                <SelectItem value="walkin">Walk-in</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <Button type="submit" disabled={pending} className="w-full">

@@ -9,7 +9,6 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const clientSchema = z.object({
   name: z.string().min(1, "Name is required").max(150),
-  client_type: z.enum(["regular", "walkin"]),
 });
 
 export type ClientInput = z.infer<typeof clientSchema>;
