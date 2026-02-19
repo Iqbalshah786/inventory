@@ -49,6 +49,33 @@ export async function create(
   return (result.rows[0] as { id: number }).id;
 }
 
+export interface ClientLedgerRow {
+  transaction_date: string;
+  description: string | null;
+  debit_aed: number;
+  credit_aed: number;
+}
+
+export async function findLedgerByClientId(
+  clientId: number,
+): Promise<ClientLedgerRow[]> {
+  const client = await findById(clientId);
+  if (!client) return [];
+  return query<ClientLedgerRow>(
+    `SELECT
+       lt.transaction_date::text AS transaction_date,
+       lt.description,
+       COALESCE(lt.debit_aed, 0) AS debit_aed,
+       COALESCE(lt.credit_aed, 0) AS credit_aed
+     FROM ledger_transactions lt
+     JOIN ledger_accounts la ON la.id = lt.account_id
+     WHERE la.account_type = 'client'
+       AND la.account_name = $1
+     ORDER BY lt.transaction_date ASC, lt.id ASC`,
+    [client.name],
+  );
+}
+
 export async function findById(id: number): Promise<Client | null> {
   const rows = await query<Client>(
     "SELECT id, name, client_type FROM clients WHERE id = $1",

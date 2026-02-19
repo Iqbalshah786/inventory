@@ -23,43 +23,44 @@ export async function GET(
     return NextResponse.json({ error: "Client not found" }, { status: 404 });
   }
 
-  const history = await clientsRepo.findPurchaseHistory(clientId);
+  const ledger = await clientsRepo.findLedgerByClientId(clientId);
+
+  let totalDebit = 0;
+  let totalCredit = 0;
+
+  const rows = ledger.map((r) => {
+    const debit = Number(r.debit_aed);
+    const credit = Number(r.credit_aed);
+    totalDebit += debit;
+    totalCredit += credit;
+    return [r.transaction_date, r.description ?? "", credit || "", debit || ""];
+  });
+
+  const balance = totalDebit - totalCredit;
 
   const wsData = [
     ["Client Name", client.name],
     [],
-    ["Sale #", "Date", "Model", "Quantity", "Price/Piece (AED)", "Total (AED)"],
-    ...history.map((r) => [
-      r.sale_id,
-      r.sale_date,
-      r.model_name,
-      r.quantity,
-      Number(r.selling_price_aed),
-      Number(r.line_total_aed),
-    ]),
+    ["Transaction Date", "Details (Particulars)", "Credit", "Debit"],
+    ...rows,
+    [],
+    ["", "Balance", "", balance],
   ];
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
   // Auto-size columns
-  ws["!cols"] = [
-    { wch: 10 },
-    { wch: 12 },
-    { wch: 25 },
-    { wch: 10 },
-    { wch: 18 },
-    { wch: 15 },
-  ];
+  ws["!cols"] = [{ wch: 16 }, { wch: 35 }, { wch: 15 }, { wch: 15 }];
 
-  XLSX.utils.book_append_sheet(wb, ws, "Purchase History");
+  XLSX.utils.book_append_sheet(wb, ws, "Ledger");
   const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
   return new NextResponse(buf, {
     headers: {
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${client.name.replace(/"/g, "")}_history.xlsx"`,
+      "Content-Disposition": `attachment; filename="${client.name.replace(/"/g, "")}_ledger.xlsx"`,
     },
   });
 }
