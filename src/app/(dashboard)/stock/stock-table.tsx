@@ -6,7 +6,8 @@ import { DataTable } from "@/components/data-table";
 import { stockColumns } from "./columns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Plus } from "lucide-react";
+import Link from "next/link";
 
 interface StockTableProps {
   data: StockListRow[];
@@ -23,9 +24,9 @@ export function StockTable({ data }: StockTableProps) {
       const d = String(value.getDate()).padStart(2, "0");
       return `${y}-${m}-${d}`;
     }
-    // Neon may return a string like "2026-02-13" already
+    // Neon return a string like "2026-02-13" already
     const s = String(value);
-    // Try parsing if it's not already YYYY-MM-DD
+    //  parsing if it's not already YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
     const parsed = new Date(s);
     if (!isNaN(parsed.getTime())) {
@@ -83,9 +84,16 @@ export function StockTable({ data }: StockTableProps) {
           onChange={(e) => setDateFilter(e.target.value)}
           className="w-auto"
         />
-        <Button variant="outline" onClick={downloadCsv}>
-          <Download className="mr-2 h-4 w-4" /> Download
-        </Button>
+        <div className="flex gap-4">
+          <Link href="/stock/add">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Add Stock
+            </Button>
+          </Link>
+          <Button variant="outline" onClick={downloadCsv}>
+            <Download className="mr-2 h-4 w-4" /> Download
+          </Button>
+        </div>
       </div>
       <DataTable
         columns={stockColumns}
