@@ -15,7 +15,7 @@ export async function findAllWithBalance(): Promise<SupplierWithBalance[]> {
         (SELECT SUM(pl.total_usd_amount * ${AED_PER_USD} + COALESCE(pl.local_cost_aed,0) + COALESCE(pl.fedex_cost_usd,0) * ${AED_PER_USD})
          FROM purchase_lots pl WHERE pl.supplier_id = s.id)
         -
-        (SELECT COALESCE(SUM(lt.credit_aed),0) FROM ledger_transactions lt
+        (SELECT COALESCE(SUM(lt.debit_aed),0) FROM ledger_transactions lt
           JOIN ledger_accounts la ON la.id = lt.account_id
           WHERE la.account_type = 'supplier'
             AND la.account_name = s.name),
@@ -25,7 +25,7 @@ export async function findAllWithBalance(): Promise<SupplierWithBalance[]> {
         (SELECT SUM(pl.total_usd_amount * ${AED_PER_USD} + COALESCE(pl.local_cost_aed,0) + COALESCE(pl.fedex_cost_usd,0) * ${AED_PER_USD})
          FROM purchase_lots pl WHERE pl.supplier_id = s.id)
         -
-        (SELECT COALESCE(SUM(lt.credit_aed),0) FROM ledger_transactions lt
+        (SELECT COALESCE(SUM(lt.debit_aed),0) FROM ledger_transactions lt
           JOIN ledger_accounts la ON la.id = lt.account_id
           WHERE la.account_type = 'supplier'
             AND la.account_name = s.name),

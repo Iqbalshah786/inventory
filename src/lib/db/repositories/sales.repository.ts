@@ -77,11 +77,11 @@ export async function createSale(input: SaleFormInput): Promise<number> {
     );
     const clientAcctId: number = clientAcctRes.rows[0].id;
 
-    // Debit client with total sale
+    // Credit client with total sale
     await client.query(
       `INSERT INTO ledger_transactions
         (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
-       VALUES ($1, CURRENT_DATE, $2, $3, 0, 'sale', $4)`,
+       VALUES ($1, CURRENT_DATE, $2, 0, $3, 'sale', $4)`,
       [clientAcctId, `Sale #${saleId}`, totalAed, saleId],
     );
 
@@ -103,7 +103,7 @@ export async function createSale(input: SaleFormInput): Promise<number> {
       await client.query(
         `INSERT INTO ledger_transactions
           (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
-         VALUES ($1, CURRENT_DATE, $2, $3, 0, 'sale', $4)`,
+         VALUES ($1, CURRENT_DATE, $2, 0, $3, 'sale', $4)`,
         [
           cashAcctId,
           `Cash received sale #${saleId}`,
@@ -112,11 +112,11 @@ export async function createSale(input: SaleFormInput): Promise<number> {
         ],
       );
 
-      // Credit client account for payment
+      // Debit client account for payment received
       await client.query(
         `INSERT INTO ledger_transactions
           (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
-         VALUES ($1, CURRENT_DATE, $2, 0, $3, 'payment', $4)`,
+         VALUES ($1, CURRENT_DATE, $2, $3, 0, 'payment', $4)`,
         [
           clientAcctId,
           `Payment for sale #${saleId}`,

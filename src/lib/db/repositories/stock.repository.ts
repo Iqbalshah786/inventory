@@ -136,7 +136,7 @@ export async function createStock(input: StockFormInput): Promise<number> {
     await client.query(
       `INSERT INTO ledger_transactions
         (account_id, transaction_date, description, debit_aed, credit_aed, debit_usd, credit_usd, reference_type, reference_id)
-       VALUES ($1, CURRENT_DATE, $2, $3, 0, $4, 0, 'purchase', $5)`,
+       VALUES ($1, CURRENT_DATE, $2, 0, $3, 0, $4, 'purchase', $5)`,
       [acctId, `Stock purchase lot #${lotId}`, totalAed, totalUsd, lotId],
     );
 

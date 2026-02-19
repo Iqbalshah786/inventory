@@ -94,11 +94,11 @@ export async function addExpense(
     );
     const acctId: number = (acctRes.rows[0] as { id: number }).id;
 
-    // Record expense in ledger_transactions
+    // Record expense in ledger_transactions (credit column for costs)
     await client.query(
       `INSERT INTO ledger_transactions
         (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
-       VALUES ($1, CURRENT_DATE, $2, $3, 0, 'expense', $4)`,
+       VALUES ($1, CURRENT_DATE, $2, 0, $3, 'expense', $4)`,
       [acctId, `Expense for ${modelName}`, amountAed, modelId],
     );
 

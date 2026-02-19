@@ -51,11 +51,11 @@ export async function recordReceived(
     );
     const acctId: number = (acctRes.rows[0] as { id: number }).id;
 
-    // Insert credit transaction
+    // Insert debit transaction for received payment
     await pg.query(
       `INSERT INTO ledger_transactions
         (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
-       VALUES ($1, CURRENT_DATE, $2, 0, $3, 'received', $4)`,
+       VALUES ($1, CURRENT_DATE, $2, $3, 0, 'received', $4)`,
       [acctId, `Payment received from ${clientName}`, amountAed, clientId],
     );
 
@@ -105,11 +105,11 @@ export async function recordPaid(
     );
     const acctId: number = (acctRes.rows[0] as { id: number }).id;
 
-    // Insert credit transaction with both AED and USD
+    // Insert debit transaction for paid payment with both AED and USD
     await pg.query(
       `INSERT INTO ledger_transactions
         (account_id, transaction_date, description, debit_aed, credit_aed, debit_usd, credit_usd, reference_type, reference_id)
-       VALUES ($1, CURRENT_DATE, $2, 0, $3, 0, $4, 'paid', $5)`,
+       VALUES ($1, CURRENT_DATE, $2, $3, 0, $4, 0, 'paid', $5)`,
       [acctId, `Payment to ${supplierName}`, amountAed, amountUsd, supplierId],
     );
 

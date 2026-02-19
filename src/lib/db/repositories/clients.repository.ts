@@ -17,7 +17,7 @@ export async function findAllWithBalance(): Promise<ClientWithBalance[]> {
       COALESCE(
         (SELECT SUM(s.total_amount_aed) FROM sales s WHERE s.client_id = c.id)
         -
-        (SELECT COALESCE(SUM(lt.credit_aed),0) FROM ledger_transactions lt
+        (SELECT COALESCE(SUM(lt.debit_aed),0) FROM ledger_transactions lt
           JOIN ledger_accounts la ON la.id = lt.account_id
           WHERE la.account_type = 'client'
             AND la.account_name = c.name),
@@ -26,7 +26,7 @@ export async function findAllWithBalance(): Promise<ClientWithBalance[]> {
       COALESCE(
         (SELECT SUM(s.total_amount_aed) FROM sales s WHERE s.client_id = c.id)
         -
-        (SELECT COALESCE(SUM(lt.credit_aed),0) FROM ledger_transactions lt
+        (SELECT COALESCE(SUM(lt.debit_aed),0) FROM ledger_transactions lt
           JOIN ledger_accounts la ON la.id = lt.account_id
           WHERE la.account_type = 'client'
             AND la.account_name = c.name),
