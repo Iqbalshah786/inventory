@@ -119,13 +119,34 @@ export interface ModelWithInventory extends MobileModel {
 
 export interface StockListRow {
   id: number;
+  lot_id: number;
   purchase_date: string;
+  supplier_name: string | null;
   model_name: string;
   quantity: number;
   buying_price: number;
   fedex_cost: number;
   local_expense: number;
   total_price: number;
+}
+
+/** Grouped by purchase lot for the stock listing page */
+export interface StockLotRow {
+  lot_id: number;
+  purchase_date: string;
+  supplier_name: string | null;
+  total_quantity: number;
+  total_usd: number;
+  fedex_cost: number;
+  local_expense: number;
+  items: StockLotItemRow[];
+}
+
+export interface StockLotItemRow {
+  model_name: string;
+  quantity: number;
+  buying_price: number;
+  line_total: number;
 }
 
 export interface SaleRow {

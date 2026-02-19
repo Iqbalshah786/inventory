@@ -8,7 +8,9 @@ export async function findAll(dateFilter?: string): Promise<StockListRow[]> {
   let sql = `
     SELECT
       pl.id,
+      pl.id AS lot_id,
       pl.purchase_date,
+      s.name AS supplier_name,
       m.model_name,
       pli.quantity,
       pli.unit_price_usd AS buying_price,
@@ -18,6 +20,7 @@ export async function findAll(dateFilter?: string): Promise<StockListRow[]> {
     FROM purchase_lot_items pli
     JOIN purchase_lots pl ON pl.id = pli.lot_id
     JOIN mobile_models m ON m.id = pli.model_id
+    LEFT JOIN suppliers s ON s.id = pl.supplier_id
   `;
   const params: unknown[] = [];
 
