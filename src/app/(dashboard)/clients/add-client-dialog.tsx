@@ -35,14 +35,19 @@ export function AddClientDialog() {
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} className="space-y-4" noValidate>
           {state?.error && (
             <p className="text-sm text-destructive">{state.error}</p>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" name="name" required />
+            <Input id="name" name="name" />
+            {state?.fieldErrors?.name && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.name}
+              </p>
+            )}
           </div>
 
           <Button type="submit" disabled={pending} className="w-full">

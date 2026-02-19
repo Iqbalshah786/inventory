@@ -3,23 +3,32 @@
 import { revalidatePath } from "next/cache";
 import * as ledgerRepo from "@/lib/db/repositories/ledger.repository";
 import { convertToUSD } from "@/lib/utils/currency";
+import {
+  receivedPaymentSchema,
+  paidPaymentSchema,
+  flattenZodErrors,
+} from "@/lib/validations";
+import type { ActionState } from "@/lib/validations";
 
 export async function recordReceivedAction(
-  _prev: { error?: string; success?: boolean } | null,
+  _prev: ActionState | null,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
-  const clientId = Number(formData.get("client_id"));
-  const amountAed = Number(formData.get("amount_aed"));
+): Promise<ActionState> {
+  const raw = {
+    client_id: formData.get("client_id"),
+    amount_aed: formData.get("amount_aed"),
+  };
 
-  if (!clientId || clientId <= 0) {
-    return { error: "Please select a client" };
-  }
-  if (!amountAed || amountAed <= 0) {
-    return { error: "Please enter a valid amount" };
+  const parsed = receivedPaymentSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { fieldErrors: flattenZodErrors(parsed.error) };
   }
 
   try {
-    await ledgerRepo.recordReceived(clientId, amountAed);
+    await ledgerRepo.recordReceived(
+      parsed.data.client_id,
+      parsed.data.amount_aed,
+    );
     revalidatePath("/payment");
     revalidatePath("/clients");
     return { success: true };
@@ -31,23 +40,27 @@ export async function recordReceivedAction(
 }
 
 export async function recordPaidAction(
-  _prev: { error?: string; success?: boolean } | null,
+  _prev: ActionState | null,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
-  const supplierId = Number(formData.get("supplier_id"));
-  const amountAed = Number(formData.get("amount_aed"));
+): Promise<ActionState> {
+  const raw = {
+    supplier_id: formData.get("supplier_id"),
+    amount_aed: formData.get("amount_aed"),
+  };
 
-  if (!supplierId || supplierId <= 0) {
-    return { error: "Please select a supplier" };
-  }
-  if (!amountAed || amountAed <= 0) {
-    return { error: "Please enter a valid amount" };
+  const parsed = paidPaymentSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { fieldErrors: flattenZodErrors(parsed.error) };
   }
 
-  const amountUsd = convertToUSD(amountAed);
+  const amountUsd = convertToUSD(parsed.data.amount_aed);
 
   try {
-    await ledgerRepo.recordPaid(supplierId, amountAed, amountUsd);
+    await ledgerRepo.recordPaid(
+      parsed.data.supplier_id,
+      parsed.data.amount_aed,
+      amountUsd,
+    );
     revalidatePath("/payment");
     revalidatePath("/suppliers");
     return { success: true };

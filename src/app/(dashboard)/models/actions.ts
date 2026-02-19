@@ -1,20 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { modelSchema } from "@/lib/validations";
+import {
+  modelSchema,
+  expenseSchema,
+  flattenZodErrors,
+} from "@/lib/validations";
+import type { ActionState } from "@/lib/validations";
 import * as modelsRepo from "@/lib/db/repositories/models.repository";
 
 export async function addModelAction(
-  _prev: { error?: string; success?: boolean } | null,
+  _prev: ActionState | null,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<ActionState> {
   const raw = {
     model_name: formData.get("model_name"),
   };
 
   const parsed = modelSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { fieldErrors: flattenZodErrors(parsed.error) };
   }
 
   try {
@@ -27,21 +32,21 @@ export async function addModelAction(
 }
 
 export async function addExpenseAction(
-  _prev: { error?: string; success?: boolean } | null,
+  _prev: ActionState | null,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
-  const modelId = Number(formData.get("model_id"));
-  const amountAed = Number(formData.get("amount_aed"));
+): Promise<ActionState> {
+  const raw = {
+    model_id: formData.get("model_id"),
+    amount_aed: formData.get("amount_aed"),
+  };
 
-  if (!modelId || modelId <= 0) {
-    return { error: "Please select a model" };
-  }
-  if (!amountAed || amountAed <= 0) {
-    return { error: "Please enter a valid amount" };
+  const parsed = expenseSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { fieldErrors: flattenZodErrors(parsed.error) };
   }
 
   try {
-    await modelsRepo.addExpense(modelId, amountAed);
+    await modelsRepo.addExpense(parsed.data.model_id, parsed.data.amount_aed);
     revalidatePath("/models");
     return { success: true };
   } catch (err) {

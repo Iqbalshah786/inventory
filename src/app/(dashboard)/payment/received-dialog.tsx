@@ -50,14 +50,14 @@ export function ReceivedDialog({ clients }: ReceivedDialogProps) {
         <DialogHeader>
           <DialogTitle>Payment Received from Client</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} className="space-y-4" noValidate>
           {state?.error && (
             <p className="text-sm text-destructive">{state.error}</p>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="client_id">Client</Label>
-            <Select name="client_id" required>
+            <Select name="client_id">
               <SelectTrigger>
                 <SelectValue placeholder="Select client" />
               </SelectTrigger>
@@ -69,6 +69,11 @@ export function ReceivedDialog({ clients }: ReceivedDialogProps) {
                 ))}
               </SelectContent>
             </Select>
+            {state?.fieldErrors?.client_id && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.client_id}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -77,11 +82,14 @@ export function ReceivedDialog({ clients }: ReceivedDialogProps) {
               id="amount_aed"
               name="amount_aed"
               type="number"
-              min={0.01}
               step="0.01"
               placeholder="0.00"
-              required
             />
+            {state?.fieldErrors?.amount_aed && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.amount_aed}
+              </p>
+            )}
           </div>
 
           <Button type="submit" disabled={pending} className="w-full">

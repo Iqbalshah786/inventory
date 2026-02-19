@@ -47,14 +47,14 @@ export function AddExpenseDialog({ models }: AddExpenseDialogProps) {
         <DialogHeader>
           <DialogTitle>Add Expense to Model</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} className="space-y-4" noValidate>
           {state?.error && (
             <p className="text-sm text-destructive">{state.error}</p>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="model_id">Model</Label>
-            <Select name="model_id" required>
+            <Select name="model_id">
               <SelectTrigger>
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
@@ -66,6 +66,11 @@ export function AddExpenseDialog({ models }: AddExpenseDialogProps) {
                 ))}
               </SelectContent>
             </Select>
+            {state?.fieldErrors?.model_id && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.model_id}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -74,11 +79,14 @@ export function AddExpenseDialog({ models }: AddExpenseDialogProps) {
               id="amount_aed"
               name="amount_aed"
               type="number"
-              min={0.01}
               step="0.01"
               placeholder="0.00"
-              required
             />
+            {state?.fieldErrors?.amount_aed && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.amount_aed}
+              </p>
+            )}
           </div>
 
           <Button type="submit" disabled={pending} className="w-full">

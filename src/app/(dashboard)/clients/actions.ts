@@ -1,20 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { clientSchema } from "@/lib/validations";
+import { clientSchema, flattenZodErrors } from "@/lib/validations";
+import type { ActionState } from "@/lib/validations";
 import * as clientsRepo from "@/lib/db/repositories/clients.repository";
 
 export async function addClientAction(
-  _prev: { error?: string; success?: boolean } | null,
+  _prev: ActionState | null,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<ActionState> {
   const raw = {
     name: formData.get("name"),
   };
 
   const parsed = clientSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { fieldErrors: flattenZodErrors(parsed.error) };
   }
 
   try {

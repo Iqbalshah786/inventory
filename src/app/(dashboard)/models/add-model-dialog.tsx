@@ -35,14 +35,19 @@ export function AddModelDialog() {
         <DialogHeader>
           <DialogTitle>Add New Model</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} className="space-y-4" noValidate>
           {state?.error && (
             <p className="text-sm text-destructive">{state.error}</p>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="model_name">Model Name</Label>
-            <Input id="model_name" name="model_name" required />
+            <Input id="model_name" name="model_name" />
+            {state?.fieldErrors?.model_name && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.model_name}
+              </p>
+            )}
           </div>
 
           <Button type="submit" disabled={pending} className="w-full">

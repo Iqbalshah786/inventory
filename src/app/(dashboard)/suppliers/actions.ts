@@ -2,21 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import * as suppliersRepo from "@/lib/db/repositories/suppliers.repository";
-import { z } from "zod/v4";
-
-const supplierSchema = z.object({
-  name: z.string().min(1, "Name is required").max(150),
-});
+import { supplierSchema, flattenZodErrors } from "@/lib/validations";
+import type { ActionState } from "@/lib/validations";
 
 export async function addSupplierAction(
-  _prev: { error?: string; success?: boolean } | null,
+  _prev: ActionState | null,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<ActionState> {
   const raw = { name: formData.get("name") };
 
   const parsed = supplierSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { fieldErrors: flattenZodErrors(parsed.error) };
   }
 
   try {

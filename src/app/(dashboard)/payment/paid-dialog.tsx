@@ -55,14 +55,14 @@ export function PaidDialog({ suppliers, aedPerUsd }: PaidDialogProps) {
         <DialogHeader>
           <DialogTitle>Payment to Supplier</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} className="space-y-4" noValidate>
           {state?.error && (
             <p className="text-sm text-destructive">{state.error}</p>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="supplier_id">Supplier</Label>
-            <Select name="supplier_id" required>
+            <Select name="supplier_id">
               <SelectTrigger>
                 <SelectValue placeholder="Select supplier" />
               </SelectTrigger>
@@ -74,6 +74,11 @@ export function PaidDialog({ suppliers, aedPerUsd }: PaidDialogProps) {
                 ))}
               </SelectContent>
             </Select>
+            {state?.fieldErrors?.supplier_id && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.supplier_id}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -82,13 +87,16 @@ export function PaidDialog({ suppliers, aedPerUsd }: PaidDialogProps) {
               id="amount_aed"
               name="amount_aed"
               type="number"
-              min={0.01}
               step="0.01"
               placeholder="0.00"
-              required
               value={amountAed}
               onChange={(e) => setAmountAed(e.target.value)}
             />
+            {state?.fieldErrors?.amount_aed && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.amount_aed}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
