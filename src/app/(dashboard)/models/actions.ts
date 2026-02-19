@@ -25,3 +25,28 @@ export async function addModelAction(
     return { error: "Failed to add model" };
   }
 }
+
+export async function addExpenseAction(
+  _prev: { error?: string; success?: boolean } | null,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean }> {
+  const modelId = Number(formData.get("model_id"));
+  const amountAed = Number(formData.get("amount_aed"));
+
+  if (!modelId || modelId <= 0) {
+    return { error: "Please select a model" };
+  }
+  if (!amountAed || amountAed <= 0) {
+    return { error: "Please enter a valid amount" };
+  }
+
+  try {
+    await modelsRepo.addExpense(modelId, amountAed);
+    revalidatePath("/models");
+    return { success: true };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to add expense";
+    return { error: message };
+  }
+}

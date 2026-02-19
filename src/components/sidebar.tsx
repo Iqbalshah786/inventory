@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
   Truck,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/app/login/actions";
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/models", label: "Models", icon: Smartphone },
   { href: "/stock", label: "Stock", icon: Package },
   { href: "/seller", label: "Sell", icon: ShoppingCart },
+  { href: "/payment", label: "Payment", icon: Wallet },
 ];
 
 export function Sidebar() {

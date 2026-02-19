@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { Client, MobileModel, SaleFormRow } from "@/types";
+import type { Client, ModelWithInventory, SaleFormRow } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,7 @@ import {
 
 interface SellerFormProps {
   clients: Client[];
-  models: MobileModel[];
+  models: ModelWithInventory[];
 }
 
 const emptyRow: SaleFormRow = {
@@ -44,6 +44,30 @@ export function SellerForm({ clients, models }: SellerFormProps) {
   const selectedClientId = rows[0]?.client_id;
   const selectedClient = clients.find((c) => c.id === Number(selectedClientId));
   const isWalkin = selectedClient?.client_type === "walkin";
+
+  // Build a map of available qty per model, minus what's already allocated in other rows
+  const modelAvailableQty = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const m of models) {
+      map.set(
+        m.id,
+        Number((m as unknown as { quantity: number }).quantity) || 0,
+      );
+    }
+    return map;
+  }, [models]);
+
+  // Compute already-used qty per model across all rows
+  const usedQtyByModel = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const row of rows) {
+      const mid = Number(row.model_id);
+      if (mid) {
+        map.set(mid, (map.get(mid) ?? 0) + (Number(row.quantity) || 0));
+      }
+    }
+    return map;
+  }, [rows]);
 
   function updateRow(index: number, field: keyof SaleFormRow, value: string) {
     setRows((prev) =>
@@ -95,6 +119,29 @@ export function SellerForm({ clients, models }: SellerFormProps) {
 
   async function handleSave() {
     setError("");
+
+    // Client-side stock validation
+    const qtyByModel = new Map<number, number>();
+    for (const r of rows) {
+      const mid = Number(r.model_id);
+      if (mid) {
+        qtyByModel.set(
+          mid,
+          (qtyByModel.get(mid) ?? 0) + (Number(r.quantity) || 0),
+        );
+      }
+    }
+    for (const [mid, qty] of qtyByModel) {
+      const available = modelAvailableQty.get(mid) ?? 0;
+      if (qty > available) {
+        const model = models.find((m) => m.id === mid);
+        setError(
+          `Insufficient stock for "${model?.model_name ?? mid}": available ${available}, requested ${qty}`,
+        );
+        return;
+      }
+    }
+
     setSaving(true);
 
     const payload = {
@@ -236,7 +283,7 @@ export function SellerForm({ clients, models }: SellerFormProps) {
                 <SelectContent>
                   {models.map((m) => (
                     <SelectItem key={m.id} value={String(m.id)}>
-                      {m.model_name}
+                      {m.model_name} (Avail: {m.quantity})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -245,13 +292,24 @@ export function SellerForm({ clients, models }: SellerFormProps) {
 
             <div className="w-24">
               {idx === 0 && <Label className="mb-1 block text-xs">Qty</Label>}
-              <Input
-                type="number"
-                min={1}
-                placeholder="Qty"
-                value={row.quantity}
-                onChange={(e) => updateRow(idx, "quantity", e.target.value)}
-              />
+              {(() => {
+                const mid = Number(row.model_id);
+                const available = modelAvailableQty.get(mid) ?? 0;
+                const usedInOtherRows =
+                  (usedQtyByModel.get(mid) ?? 0) - (Number(row.quantity) || 0);
+                const maxQty = Math.max(0, available - usedInOtherRows);
+                return (
+                  <Input
+                    type="number"
+                    min={1}
+                    max={mid ? maxQty : undefined}
+                    placeholder="Qty"
+                    value={row.quantity}
+                    onChange={(e) => updateRow(idx, "quantity", e.target.value)}
+                    title={mid ? `Max available: ${maxQty}` : ""}
+                  />
+                );
+              })()}
             </div>
 
             <div className="w-28">

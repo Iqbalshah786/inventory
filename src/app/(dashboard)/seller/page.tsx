@@ -7,7 +7,7 @@ export default async function SellerPage() {
   await requireAuth();
   const [clients, models] = await Promise.all([
     clientsRepo.findAll(),
-    modelsRepo.findAll(),
+    modelsRepo.findAllWithInventory(),
   ]);
 
   return (
