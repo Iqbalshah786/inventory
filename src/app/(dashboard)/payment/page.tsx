@@ -7,10 +7,12 @@ import { PaidDialog } from "./paid-dialog";
 
 export default async function PaymentPage() {
   await requireAuth();
-  const [clients, suppliers] = await Promise.all([
+  const [allClients, suppliers] = await Promise.all([
     clientsRepo.findAll(),
     suppliersRepo.findAll(),
   ]);
+  // Exclude walk-in clients from the payment received dropdown
+  const clients = allClients.filter((c) => c.client_type !== "walkin");
 
   return (
     <div className="space-y-6">

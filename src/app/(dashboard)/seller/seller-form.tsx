@@ -36,7 +36,6 @@ const emptyRow: SaleFormRow = {
 export function SellerForm({ clients, models }: SellerFormProps) {
   const router = useRouter();
   const [rows, setRows] = useState<SaleFormRow[]>([{ ...emptyRow }]);
-  const [amountReceived, setAmountReceived] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -153,8 +152,6 @@ export function SellerForm({ clients, models }: SellerFormProps) {
         quantity: Number(r.quantity) || 0,
         selling_price: Number(r.selling_price) || 0,
       })),
-      amount_received:
-        isWalkin && amountReceived ? Number(amountReceived) : undefined,
       is_walkin: isWalkin,
       description: description.trim() || undefined,
     };
@@ -224,7 +221,6 @@ export function SellerForm({ clients, models }: SellerFormProps) {
               onClick={() => {
                 setSavedSale(null);
                 setRows([{ ...emptyRow }]);
-                setAmountReceived("");
                 setDescription("");
               }}
             >
@@ -357,21 +353,6 @@ export function SellerForm({ clients, models }: SellerFormProps) {
           </Button>
         </div>
       </div>
-
-      {/* Conditional: show Amount Received only for walkin */}
-      {isWalkin && (
-        <div className="max-w-sm space-y-2">
-          <Label>Amount Received</Label>
-          <Input
-            type="number"
-            min={0}
-            step="0.01"
-            value={amountReceived}
-            onChange={(e) => setAmountReceived(e.target.value)}
-            placeholder="0.00"
-          />
-        </div>
-      )}
 
       {/* Description / Particulars */}
       <div className="max-w-xl space-y-2">

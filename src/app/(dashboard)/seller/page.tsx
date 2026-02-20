@@ -5,6 +5,8 @@ import { SellerForm } from "./seller-form";
 
 export default async function SellerPage() {
   await requireAuth();
+  // Ensure Walk-in client exists before loading client list
+  await clientsRepo.ensureWalkinClient();
   const [clients, models] = await Promise.all([
     clientsRepo.findAll(),
     modelsRepo.findAllWithInventory(),

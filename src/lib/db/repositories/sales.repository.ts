@@ -88,8 +88,10 @@ export async function createSale(input: SaleFormInput): Promise<number> {
       [clientAcctId, saleDescription, totalAed, saleId],
     );
 
-    // 6. If walkin and amount_received — record cash in
-    if (input.is_walkin && input.amount_received && input.amount_received > 0) {
+    // 6. If walkin — automatically record full amount as received
+    if (input.is_walkin) {
+      const receivedAmount = totalAed;
+
       await client.query(
         `INSERT INTO ledger_accounts (account_name, account_type)
          SELECT 'Cash', 'cash'
@@ -107,12 +109,7 @@ export async function createSale(input: SaleFormInput): Promise<number> {
         `INSERT INTO ledger_transactions
           (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
          VALUES ($1, CURRENT_DATE, $2, 0, $3, 'sale', $4)`,
-        [
-          cashAcctId,
-          `Cash received sale #${saleId}`,
-          input.amount_received,
-          saleId,
-        ],
+        [cashAcctId, `Cash received sale #${saleId}`, receivedAmount, saleId],
       );
 
       // Debit client account for payment received
@@ -120,12 +117,7 @@ export async function createSale(input: SaleFormInput): Promise<number> {
         `INSERT INTO ledger_transactions
           (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
          VALUES ($1, CURRENT_DATE, $2, $3, 0, 'payment', $4)`,
-        [
-          clientAcctId,
-          `Payment for sale #${saleId}`,
-          input.amount_received,
-          saleId,
-        ],
+        [clientAcctId, `Payment for sale #${saleId}`, receivedAmount, saleId],
       );
     }
 

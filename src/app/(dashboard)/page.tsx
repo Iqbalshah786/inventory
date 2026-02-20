@@ -10,7 +10,9 @@ interface CountRow {
 
 async function getStats() {
   const [clients, models, stock, sales] = await Promise.all([
-    query<CountRow>("SELECT COUNT(*)::int AS count FROM clients"),
+    query<CountRow>(
+      "SELECT COUNT(*)::int AS count FROM clients WHERE client_type IS NULL OR client_type != 'walkin'",
+    ),
     query<CountRow>("SELECT COUNT(*)::int AS count FROM mobile_models"),
     query<CountRow>(
       "SELECT COALESCE(SUM(quantity_remaining),0)::int AS count FROM inventory",

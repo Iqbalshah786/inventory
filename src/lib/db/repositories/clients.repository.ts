@@ -8,6 +8,19 @@ export async function findAll(): Promise<Client[]> {
   );
 }
 
+/**
+ * Ensure a Walk-in client record exists. Creates one if missing.
+ * Returns the walk-in client.
+ */
+export async function ensureWalkinClient(): Promise<Client> {
+  const existing = await query<Client>(
+    "SELECT id, name, client_type FROM clients WHERE client_type = 'walkin' LIMIT 1",
+  );
+  if (existing.length > 0) return existing[0];
+  const id = await create("Walk-in", "walkin");
+  return { id, name: "Walk-in", client_type: "walkin" };
+}
+
 export async function findAllWithBalance(): Promise<ClientWithBalance[]> {
   const sql = `
     SELECT
@@ -33,6 +46,7 @@ export async function findAllWithBalance(): Promise<ClientWithBalance[]> {
         0
       ) / ${AED_PER_USD} AS balance_usd
     FROM clients c
+    WHERE (c.client_type IS NULL OR c.client_type != 'walkin')
     ORDER BY c.name
   `;
   return query<ClientWithBalance>(sql);
