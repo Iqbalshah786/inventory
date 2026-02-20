@@ -29,6 +29,7 @@ const emptyRow: SaleFormRow = {
   model_id: "",
   quantity: "",
   selling_price: "",
+  description: "",
   total: 0,
 };
 
@@ -36,6 +37,7 @@ export function SellerForm({ clients, models }: SellerFormProps) {
   const router = useRouter();
   const [rows, setRows] = useState<SaleFormRow[]>([{ ...emptyRow }]);
   const [amountReceived, setAmountReceived] = useState("");
+  const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedSale, setSavedSale] = useState<PrintableSale | null>(null);
@@ -154,6 +156,7 @@ export function SellerForm({ clients, models }: SellerFormProps) {
       amount_received:
         isWalkin && amountReceived ? Number(amountReceived) : undefined,
       is_walkin: isWalkin,
+      description: description.trim() || undefined,
     };
 
     try {
@@ -222,6 +225,7 @@ export function SellerForm({ clients, models }: SellerFormProps) {
                 setSavedSale(null);
                 setRows([{ ...emptyRow }]);
                 setAmountReceived("");
+                setDescription("");
               }}
             >
               New Sale
@@ -368,6 +372,17 @@ export function SellerForm({ clients, models }: SellerFormProps) {
           />
         </div>
       )}
+
+      {/* Description / Particulars */}
+      <div className="max-w-xl space-y-2">
+        <Label>Description (Particulars)</Label>
+        <Input
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="e.g. Invoice #123, bulk order notes…"
+        />
+      </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between rounded-md border p-4">

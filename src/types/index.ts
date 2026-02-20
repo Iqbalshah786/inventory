@@ -168,5 +168,6 @@ export interface SaleFormRow {
   model_id: number | "";
   quantity: number | "";
   selling_price: number | "";
+  description: string;
   total: number;
 }

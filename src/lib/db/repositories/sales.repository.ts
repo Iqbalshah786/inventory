@@ -78,11 +78,14 @@ export async function createSale(input: SaleFormInput): Promise<number> {
     const clientAcctId: number = clientAcctRes.rows[0].id;
 
     // Credit client with total sale
+    const saleDescription = input.description?.trim()
+      ? `Sale #${saleId} - ${input.description.trim()}`
+      : `Sale #${saleId}`;
     await client.query(
       `INSERT INTO ledger_transactions
         (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
        VALUES ($1, CURRENT_DATE, $2, 0, $3, 'sale', $4)`,
-      [clientAcctId, `Sale #${saleId}`, totalAed, saleId],
+      [clientAcctId, saleDescription, totalAed, saleId],
     );
 
     // 6. If walkin and amount_received — record cash in

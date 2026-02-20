@@ -86,6 +86,7 @@ export const saleFormSchema = z.object({
   items: z.array(saleItemSchema).min(1, "At least one item is required"),
   amount_received: z.coerce.number().nonnegative().optional(),
   is_walkin: z.boolean().default(false),
+  description: z.string().optional(),
 });
 
 export type SaleFormInput = z.infer<typeof saleFormSchema>;

@@ -25,6 +25,24 @@ export async function GET(
 
   const history = await suppliersRepo.findPurchaseHistory(supplierId);
 
+  // Return JSON for in-app viewing
+  const url = new URL(_request.url);
+  if (url.searchParams.get("format") === "json") {
+    return NextResponse.json({
+      supplier_name: supplier.name,
+      rows: history.map((r) => ({
+        lot_id: r.lot_id,
+        purchase_date: r.purchase_date,
+        model_name: r.model_name,
+        quantity: r.quantity,
+        unit_price_usd: Number(r.unit_price_usd),
+        line_total_usd: Number(r.line_total_usd),
+        fedex_cost_usd: Number(r.fedex_cost_usd),
+        local_cost_aed: Number(r.local_cost_aed),
+      })),
+    });
+  }
+
   const wsData = [
     ["Supplier Name", supplier.name],
     [],

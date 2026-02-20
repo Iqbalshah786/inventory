@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import type { ClientWithBalance } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { ViewLedgerDialog } from "./view-ledger-dialog";
 
 export const clientColumns: ColumnDef<ClientWithBalance>[] = [
   {
@@ -28,21 +29,24 @@ export const clientColumns: ColumnDef<ClientWithBalance>[] = [
     },
   },
   {
-    id: "download",
+    id: "actions",
     header: "Details",
     cell: ({ row }) => {
       const clientId = row.original.id;
       return (
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Download purchase history"
-          onClick={() => {
-            window.open(`/api/clients/${clientId}/download`, "_blank");
-          }}
-        >
-          <Download className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <ViewLedgerDialog clientId={clientId} />
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Download ledger"
+            onClick={() => {
+              window.open(`/api/clients/${clientId}/download`, "_blank");
+            }}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
       );
     },
   },

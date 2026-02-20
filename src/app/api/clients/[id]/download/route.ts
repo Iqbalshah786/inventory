@@ -38,6 +38,21 @@ export async function GET(
 
   const balance = totalDebit - totalCredit;
 
+  // Return JSON for in-app viewing
+  const url = new URL(_request.url);
+  if (url.searchParams.get("format") === "json") {
+    return NextResponse.json({
+      client_name: client.name,
+      rows: ledger.map((r) => ({
+        transaction_date: r.transaction_date,
+        description: r.description ?? "",
+        credit: Number(r.credit_aed),
+        debit: Number(r.debit_aed),
+      })),
+      balance,
+    });
+  }
+
   const wsData = [
     ["Client Name", client.name],
     [],

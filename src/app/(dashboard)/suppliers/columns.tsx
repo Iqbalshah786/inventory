@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import type { SupplierWithBalance } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { ViewHistoryDialog } from "./view-history-dialog";
 
 export const supplierColumns: ColumnDef<SupplierWithBalance>[] = [
   {
@@ -28,21 +29,24 @@ export const supplierColumns: ColumnDef<SupplierWithBalance>[] = [
     },
   },
   {
-    id: "download",
+    id: "actions",
     header: "Details",
     cell: ({ row }) => {
       const supplierId = row.original.id;
       return (
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Download purchase history"
-          onClick={() => {
-            window.open(`/api/suppliers/${supplierId}/download`, "_blank");
-          }}
-        >
-          <Download className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <ViewHistoryDialog supplierId={supplierId} />
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Download purchase history"
+            onClick={() => {
+              window.open(`/api/suppliers/${supplierId}/download`, "_blank");
+            }}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
       );
     },
   },
