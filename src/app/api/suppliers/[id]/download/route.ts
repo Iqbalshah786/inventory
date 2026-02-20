@@ -23,73 +23,58 @@ export async function GET(
     return NextResponse.json({ error: "Supplier not found" }, { status: 404 });
   }
 
-  const history = await suppliersRepo.findPurchaseHistory(supplierId);
+  const ledger = await suppliersRepo.findLedgerBySupplierId(supplierId);
+
+  let totalDebit = 0;
+  let totalCredit = 0;
+
+  const rows = ledger.map((r) => {
+    const debit = Number(r.debit_aed);
+    const credit = Number(r.credit_aed);
+    totalDebit += debit;
+    totalCredit += credit;
+    return [r.transaction_date, r.description ?? "", credit || "", debit || ""];
+  });
+
+  const balance = totalCredit - totalDebit;
 
   // Return JSON for in-app viewing
   const url = new URL(_request.url);
   if (url.searchParams.get("format") === "json") {
     return NextResponse.json({
       supplier_name: supplier.name,
-      rows: history.map((r) => ({
-        lot_id: r.lot_id,
-        purchase_date: r.purchase_date,
-        model_name: r.model_name,
-        quantity: r.quantity,
-        unit_price_usd: Number(r.unit_price_usd),
-        line_total_usd: Number(r.line_total_usd),
-        fedex_cost_usd: Number(r.fedex_cost_usd),
-        local_cost_aed: Number(r.local_cost_aed),
+      rows: ledger.map((r) => ({
+        transaction_date: r.transaction_date,
+        description: r.description ?? "",
+        credit: Number(r.credit_aed),
+        debit: Number(r.debit_aed),
       })),
+      balance,
     });
   }
 
   const wsData = [
     ["Supplier Name", supplier.name],
     [],
-    [
-      "Lot #",
-      "Date",
-      "Model",
-      "Quantity",
-      "Unit Price (USD)",
-      "Line Total (USD)",
-      "FedEx (USD)",
-      "Local Expense (AED)",
-    ],
-    ...history.map((r) => [
-      r.lot_id,
-      r.purchase_date,
-      r.model_name,
-      r.quantity,
-      Number(r.unit_price_usd),
-      Number(r.line_total_usd),
-      Number(r.fedex_cost_usd),
-      Number(r.local_cost_aed),
-    ]),
+    ["Transaction Date", "Details (Particulars)", "Credit", "Debit"],
+    ...rows,
+    [],
+    ["", "Balance", "", balance],
   ];
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  ws["!cols"] = [
-    { wch: 8 },
-    { wch: 12 },
-    { wch: 25 },
-    { wch: 10 },
-    { wch: 16 },
-    { wch: 16 },
-    { wch: 14 },
-    { wch: 18 },
-  ];
+  ws["!cols"] = [{ wch: 16 }, { wch: 35 }, { wch: 15 }, { wch: 15 }];
 
-  XLSX.utils.book_append_sheet(wb, ws, "Purchase History");
+  XLSX.utils.book_append_sheet(wb, ws, "Ledger");
   const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
   return new NextResponse(buf, {
     headers: {
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${supplier.name.replace(/"/g, "")}_history.xlsx"`,
+      "Content-Disposition": `attachment; filename="${supplier.name.replace(/"/g, "")}_ledger.xlsx"`,
     },
   });
 }

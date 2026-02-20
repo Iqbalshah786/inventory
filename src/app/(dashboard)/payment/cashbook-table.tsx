@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,11 @@ export function CashbookTable() {
       fetchData(value);
     }
   }
+
+  // Fetch data on initial mount with today's date
+  useEffect(() => {
+    fetchData(date);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculations
   const openingBalance = data?.opening_balance ?? 0;

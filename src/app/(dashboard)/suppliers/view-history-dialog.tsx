@@ -19,25 +19,22 @@ import {
 } from "@/components/ui/table";
 import { Eye } from "lucide-react";
 
-interface HistoryRow {
-  lot_id: number;
-  purchase_date: string;
-  model_name: string;
-  quantity: number;
-  unit_price_usd: number;
-  line_total_usd: number;
-  fedex_cost_usd: number;
-  local_cost_aed: number;
+interface LedgerRow {
+  transaction_date: string;
+  description: string;
+  credit: number;
+  debit: number;
 }
 
-interface HistoryData {
+interface LedgerData {
   supplier_name: string;
-  rows: HistoryRow[];
+  rows: LedgerRow[];
+  balance: number;
 }
 
 export function ViewHistoryDialog({ supplierId }: { supplierId: number }) {
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState<HistoryData | null>(null);
+  const [data, setData] = useState<LedgerData | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -65,16 +62,14 @@ export function ViewHistoryDialog({ supplierId }: { supplierId: number }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="View purchase history">
+        <Button variant="ghost" size="icon" title="View ledger">
           <Eye className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {data
-              ? `${data.supplier_name} — Purchase History`
-              : "Supplier History"}
+            {data ? `${data.supplier_name} — Ledger` : "Supplier Ledger"}
           </DialogTitle>
         </DialogHeader>
 
@@ -85,49 +80,44 @@ export function ViewHistoryDialog({ supplierId }: { supplierId: number }) {
         )}
 
         {data && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Lot #</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Model</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Unit Price (USD)</TableHead>
-                <TableHead className="text-right">Line Total (USD)</TableHead>
-                <TableHead className="text-right">FedEx (USD)</TableHead>
-                <TableHead className="text-right">Local (AED)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.rows.length === 0 && (
+          <div className="space-y-4">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center">
-                    No purchase history
-                  </TableCell>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Details (Particulars)</TableHead>
+                  <TableHead className="text-right">Credit</TableHead>
+                  <TableHead className="text-right">Debit</TableHead>
                 </TableRow>
-              )}
-              {data.rows.map((r, i) => (
-                <TableRow key={i}>
-                  <TableCell>{r.lot_id}</TableCell>
-                  <TableCell>{r.purchase_date}</TableCell>
-                  <TableCell>{r.model_name}</TableCell>
-                  <TableCell className="text-right">{r.quantity}</TableCell>
-                  <TableCell className="text-right">
-                    {r.unit_price_usd.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {r.line_total_usd.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {r.fedex_cost_usd.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {r.local_cost_aed.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {data.rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">
+                      No transactions
+                    </TableCell>
+                  </TableRow>
+                )}
+                {data.rows.map((r, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{r.transaction_date}</TableCell>
+                    <TableCell>{r.description}</TableCell>
+                    <TableCell className="text-right">
+                      {r.credit ? r.credit.toFixed(2) : ""}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {r.debit ? r.debit.toFixed(2) : ""}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="flex justify-end border-t pt-3">
+              <span className="font-semibold">
+                Balance: {data.balance.toFixed(2)} AED
+              </span>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>

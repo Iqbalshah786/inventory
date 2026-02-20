@@ -85,3 +85,30 @@ export async function findPurchaseHistory(
     [supplierId],
   );
 }
+
+export interface SupplierLedgerRow {
+  transaction_date: string;
+  description: string | null;
+  debit_aed: number;
+  credit_aed: number;
+}
+
+export async function findLedgerBySupplierId(
+  supplierId: number,
+): Promise<SupplierLedgerRow[]> {
+  const supplier = await findById(supplierId);
+  if (!supplier) return [];
+  return query<SupplierLedgerRow>(
+    `SELECT
+       lt.transaction_date::text AS transaction_date,
+       lt.description,
+       COALESCE(lt.debit_aed, 0) AS debit_aed,
+       COALESCE(lt.credit_aed, 0) AS credit_aed
+     FROM ledger_transactions lt
+     JOIN ledger_accounts la ON la.id = lt.account_id
+     WHERE la.account_type = 'supplier'
+       AND la.account_name = $1
+     ORDER BY lt.transaction_date ASC, lt.id ASC`,
+    [supplier.name],
+  );
+}

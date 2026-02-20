@@ -16,6 +16,7 @@ export interface SalesSummaryRow {
   total_quantity: number;
   total_aed: number;
   sale_date: string;
+  description: string | null;
   items: SaleItemDetail[];
 }
 
@@ -51,6 +52,14 @@ export async function GET(request: NextRequest) {
          COALESCE(SUM(si.quantity), 0)::int AS total_quantity,
          s.total_amount_aed AS total_aed,
          s.sale_date::text   AS sale_date,
+         (
+           SELECT lt.description
+           FROM ledger_transactions lt
+           WHERE lt.reference_type = 'sale'
+             AND lt.reference_id = s.id
+           ORDER BY lt.id ASC
+           LIMIT 1
+         ) AS description,
          COALESCE(
            json_agg(
              json_build_object(

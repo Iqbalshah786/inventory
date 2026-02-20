@@ -39,7 +39,7 @@ export const supplierColumns: ColumnDef<SupplierWithBalance>[] = [
           <Button
             variant="ghost"
             size="icon"
-            title="Download purchase history"
+            title="Download ledger"
             onClick={() => {
               window.open(`/api/suppliers/${supplierId}/download`, "_blank");
             }}

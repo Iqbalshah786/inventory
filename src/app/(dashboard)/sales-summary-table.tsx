@@ -41,6 +41,7 @@ interface SalesSummaryRow {
   total_quantity: number;
   total_aed: number;
   sale_date: string;
+  description: string | null;
   items: SaleItemDetail[];
 }
 
@@ -138,16 +139,28 @@ const columns: ColumnDef<SalesSummaryRow>[] = [
   {
     id: "print",
     header: "Print",
-    cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => printSaleInvoice(row.original as PrintableSale)}
-        title="Print invoice"
-      >
-        <Printer className="h-4 w-4" />
-      </Button>
-    ),
+    cell: ({ row }) => {
+      const orig = row.original;
+      const printable: PrintableSale = {
+        sale_id: orig.sale_id,
+        client_name: orig.client_name,
+        total_quantity: orig.total_quantity,
+        total_aed: orig.total_aed,
+        sale_date: orig.sale_date,
+        description: orig.description ?? undefined,
+        items: orig.items,
+      };
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => printSaleInvoice(printable)}
+          title="Print invoice"
+        >
+          <Printer className="h-4 w-4" />
+        </Button>
+      );
+    },
   },
 ];
 
