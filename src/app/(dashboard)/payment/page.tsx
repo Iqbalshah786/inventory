@@ -4,6 +4,7 @@ import * as suppliersRepo from "@/lib/db/repositories/suppliers.repository";
 import { AED_PER_USD } from "@/lib/utils/currency";
 import { ReceivedDialog } from "./received-dialog";
 import { PaidDialog } from "./paid-dialog";
+import { CashbookTable } from "./cashbook-table";
 
 export default async function PaymentPage() {
   await requireAuth();
@@ -20,6 +21,11 @@ export default async function PaymentPage() {
       <div className="flex justify-end w-full gap-4">
         <ReceivedDialog clients={clients} />
         <PaidDialog suppliers={suppliers} aedPerUsd={AED_PER_USD} />
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold">Cashbook</h2>
+        <CashbookTable />
       </div>
     </div>
   );

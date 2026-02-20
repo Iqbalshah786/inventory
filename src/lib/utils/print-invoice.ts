@@ -34,6 +34,7 @@ export interface PrintableSale {
   total_quantity: number;
   total_aed: number;
   sale_date: string;
+  description?: string;
   items: PrintableSaleItem[];
 }
 
@@ -83,6 +84,7 @@ export function printSaleInvoice(sale: PrintableSale) {
     <tr><td class="label">Invoice #</td><td>${sale.sale_id}</td></tr>
     <tr><td class="label">Client</td><td>${sale.client_name}</td></tr>
     <tr><td class="label">Date</td><td>${formatDateOnly(sale.sale_date)}</td></tr>
+    ${sale.description ? `<tr><td class="label">Particulars</td><td>${sale.description}</td></tr>` : ""}
   </table>
 
   <table class="items-table">

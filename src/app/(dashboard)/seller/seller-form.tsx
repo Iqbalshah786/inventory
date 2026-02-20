@@ -180,6 +180,7 @@ export function SellerForm({ clients, models }: SellerFormProps) {
           total_quantity: totalQty,
           total_aed: totalPurchase,
           sale_date: today,
+          description: description.trim() || undefined,
           items: rows.map((r) => {
             const model = models.find((m) => m.id === Number(r.model_id));
             const qty = Number(r.quantity) || 0;
