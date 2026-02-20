@@ -116,7 +116,7 @@ export async function createSale(input: SaleFormInput): Promise<number> {
       await client.query(
         `INSERT INTO ledger_transactions
           (account_id, transaction_date, description, debit_aed, credit_aed, reference_type, reference_id)
-         VALUES ($1, CURRENT_DATE, $2, $3, 0, 'payment', $4)`,
+         VALUES ($1, CURRENT_DATE, $2, $3, 0, 'received', $4)`,
         [clientAcctId, `Payment for sale #${saleId}`, receivedAmount, saleId],
       );
     }
