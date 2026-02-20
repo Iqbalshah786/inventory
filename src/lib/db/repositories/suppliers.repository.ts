@@ -99,16 +99,39 @@ export async function findLedgerBySupplierId(
   const supplier = await findById(supplierId);
   if (!supplier) return [];
   return query<SupplierLedgerRow>(
-    `SELECT
-       lt.transaction_date::text AS transaction_date,
-       lt.description,
-       COALESCE(lt.debit_aed, 0) AS debit_aed,
-       COALESCE(lt.credit_aed, 0) AS credit_aed
-     FROM ledger_transactions lt
-     JOIN ledger_accounts la ON la.id = lt.account_id
-     WHERE la.account_type = 'supplier'
-       AND la.account_name = $1
-     ORDER BY lt.transaction_date ASC, lt.id ASC`,
-    [supplier.name],
+    `SELECT transaction_date, description, debit_aed, credit_aed
+     FROM (
+       -- Purchase entries (credit = what we owe the supplier)
+       SELECT
+         pl.purchase_date::text AS transaction_date,
+         ('Stock purchase lot #' || pl.id) AS description,
+         0 AS debit_aed,
+         (pl.total_usd_amount * ${AED_PER_USD}
+           + COALESCE(pl.local_cost_aed, 0)
+           + COALESCE(pl.fedex_cost_usd, 0) * ${AED_PER_USD}) AS credit_aed,
+         pl.purchase_date AS sort_date,
+         0 AS sort_order,
+         pl.id AS sort_id
+       FROM purchase_lots pl
+       WHERE pl.supplier_id = $1
+
+       UNION ALL
+
+       -- Paid entries (debit = what we paid the supplier)
+       SELECT
+         lt.transaction_date::text AS transaction_date,
+         lt.description,
+         COALESCE(lt.debit_aed, 0) AS debit_aed,
+         COALESCE(lt.credit_aed, 0) AS credit_aed,
+         lt.transaction_date AS sort_date,
+         1 AS sort_order,
+         lt.id AS sort_id
+       FROM ledger_transactions lt
+       JOIN ledger_accounts la ON la.id = lt.account_id
+       WHERE la.account_type = 'supplier'
+         AND la.account_name = $2
+     ) combined
+     ORDER BY sort_date ASC, sort_order ASC, sort_id ASC`,
+    [supplierId, supplier.name],
   );
 }
